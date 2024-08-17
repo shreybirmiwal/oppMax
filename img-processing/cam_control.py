@@ -4,7 +4,6 @@
     # extract: 1. activity description, 2. time, 3. health and self score, 4. career score, 5. social score, 6. alternate oppurtunity cost that was most benefit
 #3. save to firebase database
 
-
   
 import cv2
 import time
@@ -15,15 +14,16 @@ from dotenv import load_dotenv
 import json
 import firebase_admin
 from firebase_admin import credentials, storage
+import keyboard
 
 load_dotenv()
 client = OpenAI(
   api_key=os.environ['OPENAI_API_KEY'], 
 )
 
-cred = credentials.Certificate("oppmax-3247f-firebase-adminsdk-gqreh-e5638523f4.json")
+cred = credentials.Certificate("oppmax2-b6131-firebase-adminsdk-f54eu-55e4f49b28.json")
 firebase_admin.initialize_app(cred, {
-    'storageBucket': 'oppmax-3247f.appspot.com'
+    'storageBucket': 'oppmax2-b6131.appspot.com'
 })
 
 
@@ -77,6 +77,7 @@ def ask_gpt(img_url):
                 "type": "image_url",
                     "image_url": {
                         "url": img_url,
+                        "detail": "low",
                     },
                 },
 
@@ -85,7 +86,8 @@ def ask_gpt(img_url):
         temperature=0,
         response_format={"type": "json_object"}
     )
-    return response
+
+    return response.model_dump_json(indent=2)
 
 
 def uploadFirebase(image_path):
@@ -95,21 +97,54 @@ def uploadFirebase(image_path):
     blob.make_public()
     return blob.public_url
 
-    
 
+def saveInfo(data, img_url, timestamp):
+    activity = data["Activity"]
+    healthScore = data["healthScore"]
+    careerScore = data["careerScore"]
+    socialScore = data["socialScore"]
+    alternateActivity = data["alternateActivity"]
+    img_url = img_url
+    timestamp = timestamp
+
+
+
+    
+# every 60 seconds
+# def main():
+#     while True:
+#         image_path = capture_image()
+#         if image_path:
+
+#             img_url = uploadFirebase(image_path)
+        
+#             response = ask_gpt(img_url)
+            
+#             print(response)
+#             print("Image captured and processed.")
+
+#         time.sleep(60)
+
+
+#whenever user presses button
 def main():
     while True:
-        image_path = capture_image()
-        if image_path:
+        if keyboard.is_pressed('space'):  # Wait for the spacebar to be pressed
+            image_path = capture_image()
+            if image_path:
+                img_url = uploadFirebase(image_path) #upload firebase
+                response = ask_gpt(img_url) #ask gpt
+                
+                # save to firebase
+                response = json.loads(response)
+                data = (response["choices"][0]["message"]["content"])
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                saveInfo(data, img_url, timestamp)
 
-            img_url = uploadFirebase(image_path)
-        
-            response = ask_gpt(img_url)
-            
-            print(response)
-            print("Image captured and processed.")
 
-        time.sleep(60)
+                print("Image captured and processed.")
+            time.sleep(1) 
+
 
 
 if __name__ == "__main__":
