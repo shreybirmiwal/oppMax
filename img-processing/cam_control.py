@@ -13,7 +13,7 @@ import os
 from dotenv import load_dotenv
 import json
 import firebase_admin
-from firebase_admin import credentials, storage
+from firebase_admin import credentials, storage, firestore
 import keyboard
 
 load_dotenv()
@@ -25,6 +25,7 @@ cred = credentials.Certificate("oppmax2-b6131-firebase-adminsdk-f54eu-55e4f49b28
 firebase_admin.initialize_app(cred, {
     'storageBucket': 'oppmax2-b6131.appspot.com'
 })
+db = firestore.client()
 
 
 def capture_image():
@@ -99,13 +100,27 @@ def uploadFirebase(image_path):
 
 
 def saveInfo(data, img_url, timestamp):
+    data = json.loads(data)
+
+
     activity = data["Activity"]
     healthScore = data["healthScore"]
     careerScore = data["careerScore"]
     socialScore = data["socialScore"]
     alternateActivity = data["alternateActivity"]
-    img_url = img_url
-    timestamp = timestamp
+
+    data = {
+        "activity": activity,
+        "healthScore": healthScore,
+        "careerScore": careerScore,
+        "socialScore": socialScore,
+        "alternateActivity": alternateActivity,
+        "img_url": img_url,
+        "timestamp": timestamp
+    }
+
+    db.collection("data").document(timestamp).set(data)
+
 
 
 
