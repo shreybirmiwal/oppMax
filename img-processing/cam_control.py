@@ -64,6 +64,7 @@ def ask_gpt(img_url):
         f"This image is from the first person POV "
         "Please return: The Activity the user is doing in 2-3 words, "
         "A score from (-10,10) regarding the activity and the users' a) Health, b) career c) social. "
+        "Please be critical in the scores, they can be negative as well."
         "Lastly, include an alternative activity the user can do to maximize the time to optimize opportunity cost. "
         f"Return the response in JSON format. Expected format below: \n {json.dumps(expected_format, indent=2)}"
     )
